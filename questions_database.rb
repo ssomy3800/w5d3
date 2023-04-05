@@ -33,7 +33,20 @@ class Users
   
       Users.new(identification.first)
     end
+    def self.find_by_name(fname,lname)
+        name = QuestionsDatabase.instance.execute(<<-SQL, fname, lname)
+        SELECT
+        *
+        FROM
+        users
+        WHERE
+        fname = ? AND lname = ?
+        SQL
+        return nil unless name.length > 0
+  
+        Users.new(name.first)
 
+    end
 
     def self.find_by_fname(fname)
 
@@ -66,6 +79,16 @@ class Users
       Users.new(lastname.first)
     end
 
+    def authored_questions
+        Questions.find_by_author_id(self.id)
+
+    end
+
+    def authored_replies
+        Replies.find_by_user_id(self.id)
+
+    end
+
     def initialize(options)
         @id = options['id']
         @fname = options['fname']
@@ -81,9 +104,6 @@ class Questions
         data.map { |datum| Questions.new(datum) }
     end
 
-    # def find_by_author_id(author_id)
-        
-    # end
 
     def self.find_by_id(id)
         identification = QuestionsDatabase.instance.execute(<<-SQL, id)
@@ -141,6 +161,23 @@ class Questions
       SQL
         questions.map {|question| Questions.new(question)}
     end
+
+    def author
+        # temp = Questions.find_by_id(self.id)
+        # Users.find_by_id(temp)
+        data = QuestionsDatabase.instance.execute(<<-SQL, @author_id)
+        SELECT
+            *
+        FROM
+            users
+        WHERE
+            users.id = ?
+        SQL
+        Users.new(data[0])
+    end
+
+        
+
 
     def initialize(options)
         @id = options['id']
